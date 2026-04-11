@@ -59,8 +59,14 @@ The system implements a Zero-Knowledge Architecture. The Cloudflare Worker acts 
 ## Local Development
 
 ### Prerequisites
+
 - Node.js (Latest LTS recommended)
-- Cloudflare Wrangler CLI (`npm install -g wrangler`)
+- Cloudflare Wrangler CLI:
+   ```bash
+   npm install -g wrangler
+- Hono:
+   ```bash
+   npm install hono
 
 ### Setup and Installation
 
