@@ -38,11 +38,23 @@ The `users` table is structured to support non-custodial key management and publ
 
 ## Security Model
 
-The system follows a non-custodial security architecture:
+The system implements a Zero-Knowledge Architecture. The Cloudflare Worker acts as a passive storage layer for identity metadata, while all sensitive cryptographic operations occur strictly on the user's local machine.
 
-1. **Key Generation:** Keys are generated locally within the Tauri application or via the secure FastAPI environment.
-2. **Encryption:** The private key is encrypted with a user-defined "Key Passphrase" before being sent to this server.
-3. **Verification:** The FastAPI backend retrieves the public_key from this server to verify file signatures. The plain-text private key is never transmitted or stored on any server.
+1. Key Generation & Protection
+Local Generation: RSA or Ed25519 key pairs are generated within the Tauri application or the local FastAPI environment.
+
+Client-Side Encryption: Before transmission, the private key is encrypted using AES with a user-defined "Key Passphrase".
+
+No Plain-Text Storage: The server never receives, processes, or stores the user's plain-text private key.
+
+2. Authentication & Verification Flow
+Registration: The client sends the login, password_hash, public_key, and the encrypted private key blob to the server.
+
+Login: The server verifies the password_hash. Upon success, it sends the encrypted_private_key back to the Tauri application.
+
+Decryption: The user enters their passphrase locally in Tauri to decrypt the key for signing operations.
+
+Verification: When the local FastAPI backend needs to verify a signature, it fetches the user's public_key from this server via the /api/public-key/:login endpoint.
 
 ## Local Development
 
