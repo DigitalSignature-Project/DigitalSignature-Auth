@@ -40,7 +40,7 @@ The `users` table is structured to support non-custodial key management and publ
 
 The system implements a Zero-Knowledge Architecture. The Cloudflare Worker acts as a passive storage layer for identity metadata, while all sensitive cryptographic operations occur strictly on the user's local machine.
 
-1. Key Generation & Protection
+### 1. Key Generation & Protection
    - Local Generation: RSA or Ed25519 key pairs are generated within the Tauri application or the local FastAPI environment.
 
    - Client-Side Encryption: Before transmission, the private key is encrypted using AES with a user-defined "Key Passphrase".
