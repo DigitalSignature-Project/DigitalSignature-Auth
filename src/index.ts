@@ -1,7 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 
-// Definiujemy powiązanie (binding) z bazą D1 skonfigurowaną w wrangler.toml
 type Bindings = {
   DB: D1Database
 }
