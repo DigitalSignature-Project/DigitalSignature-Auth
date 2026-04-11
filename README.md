@@ -62,12 +62,12 @@ The system follows a non-custodial security architecture:
    npm install
 
 3. Local Runtime:
-   Start the local development server with a local D1 instance:
+   - Start the local development server with a local D1 instance:
    ```bash
    npm run dev
 
 4. Database Initialization:
-   Execute the schema initialization:
+   - Execute the schema initialization:
    ```bash
    npx wrangler d1 execute <DATABASE_NAME> --local --file=./schema.sql
 
