@@ -41,20 +41,20 @@ The `users` table is structured to support non-custodial key management and publ
 The system implements a Zero-Knowledge Architecture. The Cloudflare Worker acts as a passive storage layer for identity metadata, while all sensitive cryptographic operations occur strictly on the user's local machine.
 
 1. Key Generation & Protection
-- Local Generation: RSA or Ed25519 key pairs are generated within the Tauri application or the local FastAPI environment.
+   - Local Generation: RSA or Ed25519 key pairs are generated within the Tauri application or the local FastAPI environment.
 
-- Client-Side Encryption: Before transmission, the private key is encrypted using AES with a user-defined "Key Passphrase".
+   - Client-Side Encryption: Before transmission, the private key is encrypted using AES with a user-defined "Key Passphrase".
 
-- No Plain-Text Storage: The server never receives, processes, or stores the user's plain-text private key.
+   - No Plain-Text Storage: The server never receives, processes, or stores the user's plain-text private key.
 
 2. Authentication & Verification Flow
-- Registration: The client sends the login, password_hash, public_key, and the encrypted private key blob to the server.
+   1. Registration: The client sends the login, password_hash, public_key, and the encrypted private key blob to the server.
 
-- Login: The server verifies the password_hash. Upon success, it sends the encrypted_private_key back to the Tauri application.
+   2. Login: The server verifies the password_hash. Upon success, it sends the encrypted_private_key back to the Tauri application.
 
-- Decryption: The user enters their passphrase locally in Tauri to decrypt the key for signing operations.
+   3. Decryption: The user enters their passphrase locally in Tauri to decrypt the key for signing operations.
 
-- Verification: When the local FastAPI backend needs to verify a signature, it fetches the user's public_key from this server via the /api/public-key/:login endpoint.
+   4. Verification: When the local FastAPI backend needs to verify a signature, it fetches the user's public_key from this server via the /api/public-key/:login endpoint.
 
 ## Local Development
 
