@@ -1,0 +1,8 @@
+name = "digitalsignature-auth"
+main = "src/index.ts"
+compatibility_date = "2024-03-20"
+
+[[d1_databases]]
+binding = "DB" # Pod tą nazwą baza będzie dostępna w kodzie Hono
+database_name = "digitalsignature-db" 
+database_id = "4e789002-b93a-40ad-9a03-a6c744b97484"
