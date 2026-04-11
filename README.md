@@ -48,7 +48,7 @@ The system follows a non-custodial security architecture:
 
 ### Prerequisites
 - Node.js (Latest LTS recommended)
-- Cloudflare Wrangler CLI (npm install -g wrangler)
+- Cloudflare Wrangler CLI (`npm install -g wrangler`)
 
 ### Setup and Installation
 
