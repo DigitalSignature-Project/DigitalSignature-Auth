@@ -72,7 +72,7 @@ The system implements a Zero-Knowledge Architecture. The Cloudflare Worker acts 
 
 1. Clone the repository:
    ```bash
-   git clone [https://github.com/DigitalSignature-Project/DigitalSignature-Auth.git](https://github.com/DigitalSignature-Project/DigitalSignature-Auth.git)
+   git clone https://github.com/DigitalSignature-Project/DigitalSignature-Auth.git
    cd DigitalSignature-Auth
 
 2. Install dependencies:
