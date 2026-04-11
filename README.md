@@ -47,7 +47,7 @@ The system implements a Zero-Knowledge Architecture. The Cloudflare Worker acts 
 
    - No Plain-Text Storage: The server never receives, processes, or stores the user's plain-text private key.
 
-2. Authentication & Verification Flow
+### 2. Authentication & Verification Flow
    1. Registration: The client sends the login, password_hash, public_key, and the encrypted private key blob to the server.
 
    2. Login: The server verifies the password_hash. Upon success, it sends the encrypted_private_key back to the Tauri application.
