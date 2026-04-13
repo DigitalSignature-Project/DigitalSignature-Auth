@@ -36,6 +36,8 @@ The `users` table is structured to support non-custodial key management and publ
 | POST | /api/update-keys | Updates both public and encrypted private keys (e.g., during key reset) |
 | GET | /api/public-key/:login | Retrieves a public key for signature verification by the FastAPI backend |
 
+More information can be found at: [Api Integration](API_INTEGRATION_GUIDE.md)
+
 ## Security Model
 
 The system implements a Zero-Knowledge Architecture. The Cloudflare Worker acts as a passive storage layer for identity metadata, while all sensitive cryptographic operations occur strictly on the user's local machine.
