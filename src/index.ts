@@ -16,18 +16,18 @@ app.get('/api/status', (c) => {
 app.post('/api/register', async (c) => {
   try {
     const body = await c.req.json()
-    const { login, email, password_hash, public_key, encrypted_private_key } = body
+    const { login, password_hash, public_key, encrypted_private_key } = body
 
-    if (!login || !email || !password_hash || !public_key || !encrypted_private_key) {
+    if (!login || !password_hash || !public_key || !encrypted_private_key) {
       return c.json({ error: 'Missing required fields' }, 400)
     }
 
     const id = crypto.randomUUID()
 
     const { success } = await c.env.DB.prepare(
-      `INSERT INTO users (id, login, email, password_hash, public_key, encrypted_private_key) 
-       VALUES (?, ?, ?, ?, ?, ?)`
-    ).bind(id, login, email, password_hash, public_key, encrypted_private_key).run()
+      `INSERT INTO users (id, login, password_hash, public_key, encrypted_private_key) 
+       VALUES (?, ?, ?, ?, ?)`
+    ).bind(id, login, password_hash, public_key, encrypted_private_key).run()
 
     if (success) {
       return c.json({ message: 'User registered successfully', userId: id }, 201)
@@ -36,7 +36,7 @@ app.post('/api/register', async (c) => {
     }
   } catch (error: any) {
     if (error.message.includes('UNIQUE constraint failed')) {
-      return c.json({ error: 'Login or email already exists' }, 409)
+      return c.json({ error: 'Login already exists' }, 409)
     }
     return c.json({ error: 'Internal Server Error' }, 500)
   }

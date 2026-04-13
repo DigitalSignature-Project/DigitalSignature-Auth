@@ -3,7 +3,6 @@ DROP TABLE IF EXISTS users;
 CREATE TABLE users (
     id TEXT PRIMARY KEY,
     login TEXT UNIQUE NOT NULL,
-    email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     public_key TEXT NOT NULL,
     encrypted_private_key TEXT NOT NULL,
