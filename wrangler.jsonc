@@ -16,7 +16,7 @@
 	],
 	"d1_databases": [
 		{
-			"binding": "digitalsignature_db",
+			"binding": "DB",
 			"database_name": "digitalsignature-db",
 			"database_id": "4e789002-b93a-40ad-9a03-a6c744b97484"
 		}
