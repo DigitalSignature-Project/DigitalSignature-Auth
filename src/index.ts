@@ -35,10 +35,10 @@ app.post('/api/register', async (c) => {
       return c.json({ error: 'Failed to register user' }, 500)
     }
   } catch (error: any) {
-    if (error.message.includes('UNIQUE constraint failed')) {
-      return c.json({ error: 'Login already exists' }, 409)
-    }
-    return c.json({ error: 'Internal Server Error' }, 500)
+    return c.json({ 
+      error: 'Internal Server Error', 
+      details: error.message 
+    }, 500)
   }
 })
 
