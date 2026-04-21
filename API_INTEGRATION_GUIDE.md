@@ -25,7 +25,8 @@ Body (Request):
 "login": "johndoe",
 "password_hash": "hashed_password_string",
 "public_key": "public_key_string",
-"encrypted_private_key": "aes_encrypted_private_key_blob"
+"encrypted_private_key": "aes_encrypted_private_key_blob",
+"key_module": "windows-cng"
 }
 ```
 ### Responses:
@@ -60,7 +61,8 @@ Body (Request):
 {
 "message": "Login successful",
 "encrypted_private_key": "aes_encrypted_private_key_blob",
-"public_key": "public_key_string"
+"public_key": "public_key_string",
+"key_module": "windows-cng"
 }
 ```
 400 Bad Request: No login or password.
@@ -84,7 +86,8 @@ Path parameters: login - username of the user whose key we want to retrieve.
 ```JSON
 {
 "login": "johndoe",
-"public_key": "public_key_string"
+"public_key": "public_key_string",
+"key_module": "windows-cng"
 }
 ```
 404 Not Found: User does not exist.
@@ -104,10 +107,14 @@ Body (Request):
 "login": "johndoe",
 "password_hash": "hashed_password_string",
 "new_public_key": "new_public_key_string",
-"new_encrypted_private_key": "new_aes_encrypted_private_key_blob"
+"new_encrypted_private_key": "new_aes_encrypted_private_key_blob",
+"new_key_module": "windows-cng"
 }
 ```
 ### Responses:
+
+Notes:
+- `new_key_module` is optional. If omitted, only keys are updated.
 
 200 OK: {"message": "Keys updated successfully"}.
 

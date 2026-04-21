@@ -20,10 +20,10 @@ The `users` table is structured to support non-custodial key management and publ
 
 - `id`: UUID (Primary Key)
 - `login`: Unique username
-- `email`: Unique email address
 - `password_hash`: Hashed password for authentication
 - `public_key`: The current public key used for signature verification
 - `encrypted_private_key`: A client-side encrypted private key blob (AES-encrypted)
+- `key_module`: Client key module/provider identifier (required)
 - `created_at`: Timestamp of account creation
 
 ## API Endpoints
@@ -31,12 +31,79 @@ The `users` table is structured to support non-custodial key management and publ
 | Method | Path | Description |
 | :--- | :--- | :--- |
 | GET | /api/status | Returns the operational status of the API |
-| POST | /api/register | Creates a new account with initial public key and encrypted private key |
-| POST | /api/login | Authenticates user and returns the encrypted key for local decryption |
-| POST | /api/update-keys | Updates both public and encrypted private keys (e.g., during key reset) |
-| GET | /api/public-key/:login | Retrieves a public key for signature verification by the FastAPI backend |
+| POST | /api/register | Creates a new account with initial keys and required `key_module` |
+| POST | /api/login | Authenticates user and returns keys + `key_module` |
+| POST | /api/update-keys | Updates keys (and optionally `key_module`) |
+| GET | /api/public-key/:login | Retrieves `public_key` + `key_module` for verification |
 
 More information can be found at: [Api Integration](API_INTEGRATION_GUIDE.md)
+
+### Endpoint payloads (current)
+
+#### `POST /api/register`
+
+**Request JSON**
+
+```json
+{
+  "login": "alice",
+  "password_hash": "<hash>",
+  "public_key": "<pem-or-jwk>",
+  "encrypted_private_key": "<base64-or-json>",
+  "key_module": "windows-cng"
+}
+```
+
+#### `POST /api/login`
+
+**Request JSON**
+
+```json
+{
+  "login": "alice",
+  "password_hash": "<hash>"
+}
+```
+
+**Response JSON (200)**
+
+```json
+{
+  "message": "Login successful",
+  "encrypted_private_key": "<base64-or-json>",
+  "public_key": "<pem-or-jwk>",
+  "key_module": "windows-cng"
+}
+```
+
+#### `POST /api/update-keys`
+
+**Request JSON**
+
+```json
+{
+  "login": "alice",
+  "password_hash": "<hash>",
+  "new_public_key": "<pem-or-jwk>",
+  "new_encrypted_private_key": "<base64-or-json>",
+  "new_key_module": "windows-cng"
+}
+```
+
+Notes:
+- `new_key_module` is optional. If omitted, only keys are updated.
+
+#### `GET /api/public-key/:login`
+
+**Response JSON (200)**
+
+```json
+{
+  "login": "alice",
+  "public_key": "<pem-or-jwk>",
+  "key_module": "windows-cng"
+}
+```
 
 ## Security Model
 
@@ -50,9 +117,9 @@ The system implements a Zero-Knowledge Architecture. The Cloudflare Worker acts 
    - No Plain-Text Storage: The server never receives, processes, or stores the user's plain-text private key.
 
 ### 2. Authentication & Verification Flow
-   1. Registration: The client sends the login, password_hash, public_key, and the encrypted private key blob to the server.
+   1. Registration: The client sends the login, password_hash, public_key, encrypted private key blob, and `key_module` to the server.
 
-   2. Login: The server verifies the password_hash. Upon success, it sends the encrypted_private_key back to the Tauri application.
+   2. Login: The server verifies the password_hash. Upon success, it sends back `encrypted_private_key`, `public_key`, and `key_module`.
 
    3. Decryption: The user enters their passphrase locally in Tauri to decrypt the key for signing operations.
 
@@ -66,9 +133,11 @@ The system implements a Zero-Knowledge Architecture. The Cloudflare Worker acts 
 - Cloudflare Wrangler CLI:
    ```bash
    npm install -g wrangler
+   ```
 - Hono:
    ```bash
    npm install hono
+   ```
 
 ### Setup and Installation
 
