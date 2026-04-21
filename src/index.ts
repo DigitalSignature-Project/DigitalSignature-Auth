@@ -47,15 +47,21 @@ app.post('/api/login', async (c) => {
     const body = await c.req.json()
     const { login, password_hash } = body
 
-    if (!login || !password_hash) {
+    if (typeof login !== 'string' || typeof password_hash !== 'string') {
+      return c.json({ error: 'Missing login or password_hash' }, 400)
+    }
+
+    const normalizedLogin = login.trim()
+
+    if (!normalizedLogin || !password_hash) {
       return c.json({ error: 'Missing login or password_hash' }, 400)
     }
 
     const user = await c.env.DB.prepare(
       `SELECT password_hash, encrypted_private_key, public_key, key_module FROM users WHERE login = ?`
-    ).bind(login).first()
+    ).bind(normalizedLogin).first()
 
-    if (!user) {
+    if (!user || user.password_hash == null) {
       return c.json({ error: 'User not found' }, 404)
     }
 
