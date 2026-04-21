@@ -16,18 +16,18 @@ app.get('/api/status', (c) => {
 app.post('/api/register', async (c) => {
   try {
     const body = await c.req.json()
-    const { login, password_hash, public_key, encrypted_private_key } = body
+    const { login, password_hash, public_key, encrypted_private_key, key_module } = body
 
-    if (!login || !password_hash || !public_key || !encrypted_private_key) {
+    if (!login || !password_hash || !public_key || !encrypted_private_key || !key_module) {
       return c.json({ error: 'Missing required fields' }, 400)
     }
 
     const id = crypto.randomUUID()
 
     const { success } = await c.env.DB.prepare(
-      `INSERT INTO users (id, login, password_hash, public_key, encrypted_private_key) 
-       VALUES (?, ?, ?, ?, ?)`
-    ).bind(id, login, password_hash, public_key, encrypted_private_key).run()
+      `INSERT INTO users (id, login, password_hash, public_key, encrypted_private_key, key_module) 
+       VALUES (?, ?, ?, ?, ?, ?)`
+    ).bind(id, login, password_hash, public_key, encrypted_private_key, key_module).run()
 
     if (success) {
       return c.json({ message: 'User registered successfully', userId: id }, 201)
@@ -52,7 +52,7 @@ app.post('/api/login', async (c) => {
     }
 
     const user = await c.env.DB.prepare(
-      `SELECT password_hash, encrypted_private_key, public_key FROM users WHERE login = ?`
+      `SELECT password_hash, encrypted_private_key, public_key, key_module FROM users WHERE login = ?`
     ).bind(login).first()
 
     if (!user) {
@@ -66,7 +66,8 @@ app.post('/api/login', async (c) => {
     return c.json({
       message: 'Login successful',
       encrypted_private_key: user.encrypted_private_key,
-      public_key: user.public_key
+      public_key: user.public_key,
+      key_module: user.key_module
     }, 200)
 
   } catch (error) {
@@ -78,7 +79,7 @@ app.post('/api/login', async (c) => {
 app.post('/api/update-keys', async (c) => {
   try {
     const body = await c.req.json()
-    const { login, password_hash, new_public_key, new_encrypted_private_key } = body
+    const { login, password_hash, new_public_key, new_encrypted_private_key, new_key_module } = body
 
     const user = await c.env.DB.prepare(
       `SELECT password_hash FROM users WHERE login = ?`
@@ -88,9 +89,15 @@ app.post('/api/update-keys', async (c) => {
       return c.json({ error: 'Unauthorized or invalid credentials' }, 401)
     }
 
-    const { success } = await c.env.DB.prepare(
-      `UPDATE users SET public_key = ?, encrypted_private_key = ? WHERE login = ?`
-    ).bind(new_public_key, new_encrypted_private_key, login).run()
+    const statement = new_key_module
+      ? `UPDATE users SET public_key = ?, encrypted_private_key = ?, key_module = ? WHERE login = ?`
+      : `UPDATE users SET public_key = ?, encrypted_private_key = ? WHERE login = ?`
+
+    const binder = c.env.DB.prepare(statement)
+
+    const { success } = new_key_module
+      ? await binder.bind(new_public_key, new_encrypted_private_key, new_key_module, login).run()
+      : await binder.bind(new_public_key, new_encrypted_private_key, login).run()
 
     if (success) {
       return c.json({ message: 'Keys updated successfully' }, 200)
@@ -108,7 +115,7 @@ app.get('/api/public-key/:login', async (c) => {
     const login = c.req.param('login')
 
     const user = await c.env.DB.prepare(
-      `SELECT public_key FROM users WHERE login = ?`
+      `SELECT public_key, key_module FROM users WHERE login = ?`
     ).bind(login).first()
 
     if (!user) {
@@ -117,7 +124,8 @@ app.get('/api/public-key/:login', async (c) => {
 
     return c.json({
       login: login,
-      public_key: user.public_key
+      public_key: user.public_key,
+      key_module: user.key_module
     }, 200)
 
   } catch (error) {
