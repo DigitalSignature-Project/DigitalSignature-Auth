@@ -130,3 +130,57 @@ Technical endpoint for checking if the authorization server is alive.
 ### Responses: 
 
 200 OK: {"status": "ok", "message": "DigitalSignature Auth Server is running"}.
+
+---
+
+# Local Backend Endpoints (FastAPI)
+
+*Note: These endpoints run locally on the user's machine (e.g., `127.0.0.1:2138`) to ensure that plain-text private keys never leave the device.*
+
+## 6. Sign File
+
+Encrypts and signs a document using the user's locally unlocked private key.
+
+**Endpoint:** `POST /server/sign_file`
+**Headers:** `Content-Type: application/json`
+
+**Body (Request JSON):**
+```json
+{
+  "filePath": "C:/absolute/path/to/your/document.pdf",
+  "algorithm": "algo1",
+  "hashType": "hash1"
+}
+```
+Responses:
+
+- 200 OK: Returns the signed file as a downloadable Blob.
+
+- 400 Bad Request: Missing file path or parameters.
+
+- 500 Internal Server Error: Signing process failed.
+
+## 7. Verify Signature
+
+Verifies the digital signature of a file on the local disk. Contacts the Cloudflare Auth server internally to fetch the necessary public key.
+
+Endpoint: POST /server/verify_file
+Headers: Content-Type: application/json
+
+**Body (Request JSON):**
+    ```json
+    {
+    "filePath": "C:/absolute/path/to/your/signed_document.pdf"
+    }
+Responses:
+- `200 OK`: Returns the verification result.
+  ```json
+    {
+    "isValid": true,
+    "signer": "John Doe (john.doe@example.com)",
+    "date": "02.04.2026, 11:32 AM"
+    }
+    ```
+- 400 Bad Request: Missing or invalid file path.
+
+- 500 Internal Server Error: Processing error.
