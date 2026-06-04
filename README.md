@@ -16,7 +16,9 @@ This server provides a "Zero-Knowledge" authentication and key management system
 
 ## Database Schema (Cloudflare D1)
 
-The `users` table is structured to support non-custodial key management and public key infrastructure (PKI):
+The database consists of two tables to support non-custodial key management and public key infrastructure (PKI):
+
+### `users` table
 
 - `id`: UUID (Primary Key)
 - `login`: Unique username
@@ -24,7 +26,15 @@ The `users` table is structured to support non-custodial key management and publ
 - `public_key`: The current public key used for signature verification
 - `encrypted_private_key`: A client-side encrypted private key blob (AES-encrypted)
 - `key_module`: Client key module/provider identifier (required)
-- `created_at`: Timestamp of account creation
+
+### `additional_keys` table
+
+- `id`: UUID (Primary Key)
+- `user_id`: Foreign key referencing the user
+- `key_type`: Type of the additional key (e.g., "backup", "device")
+- `public_key`: The public key for this additional key
+- `encrypted_private_key`: A client-side encrypted private key blob
+- `key_module`: Client key module/provider identifier for this key
 
 ## API Endpoints
 
@@ -32,9 +42,10 @@ The `users` table is structured to support non-custodial key management and publ
 | :--- | :--- | :--- |
 | GET | /api/status | Returns the operational status of the API |
 | POST | /api/register | Creates a new account with initial keys and required `key_module` |
-| POST | /api/login | Authenticates user and returns keys + `key_module` |
-| POST | /api/update-keys | Updates keys (and optionally `key_module`) |
-| GET | /api/public-key/:login | Retrieves `public_key` + `key_module` for verification |
+| POST | /api/login | Authenticates user and returns keys + `key_module` + additional keys |
+| POST | /api/add-key | Adds an additional key to the user account |
+| POST | /api/update-keys | Updates main keys (and optionally `key_module`) |
+| GET | /api/public-keys/:login | Retrieves `public_key` + `key_module` + additional keys for verification |
 
 More information can be found at: [Api Integration](API_INTEGRATION_GUIDE.md)
 
@@ -72,7 +83,16 @@ More information can be found at: [Api Integration](API_INTEGRATION_GUIDE.md)
   "message": "Login successful",
   "encrypted_private_key": "<base64-or-json>",
   "public_key": "<pem-or-jwk>",
-  "key_module": "windows-cng"
+  "key_module": "windows-cng",
+  "additional_keys": [
+    {
+      "key_id": "<uuid>",
+      "key_type": "<type>",
+      "public_key": "<pem-or-jwk>",
+      "encrypted_private_key": "<base64-or-json>",
+      "key_module": "<module>"
+    }
+  ]
 }
 ```
 
@@ -93,7 +113,31 @@ More information can be found at: [Api Integration](API_INTEGRATION_GUIDE.md)
 Notes:
 - `new_key_module` is optional. If omitted, only keys are updated.
 
-#### `GET /api/public-key/:login`
+#### `POST /api/add-key`
+
+**Request JSON**
+
+```json
+{
+  "login": "alice",
+  "password_hash": "<hash>",
+  "key_type": "backup",
+  "public_key": "<pem-or-jwk>",
+  "encrypted_private_key": "<base64-or-json>",
+  "key_module": "windows-cng"
+}
+```
+
+**Response JSON (201)**
+
+```json
+{
+  "message": "Additional key added successfully",
+  "key_id": "<uuid>"
+}
+```
+
+#### `GET /api/public-keys/:login`
 
 **Response JSON (200)**
 
@@ -101,7 +145,14 @@ Notes:
 {
   "login": "alice",
   "public_key": "<pem-or-jwk>",
-  "key_module": "windows-cng"
+  "key_module": "windows-cng",
+  "additional_keys": [
+    {
+      "key_type": "<type>",
+      "public_key": "<pem-or-jwk>",
+      "key_module": "<module>"
+    }
+  ]
 }
 ```
 
@@ -119,11 +170,13 @@ The system implements a Zero-Knowledge Architecture. The Cloudflare Worker acts 
 ### 2. Authentication & Verification Flow
    1. Registration: The client sends the login, password_hash, public_key, encrypted private key blob, and `key_module` to the server.
 
-   2. Login: The server verifies the password_hash. Upon success, it sends back `encrypted_private_key`, `public_key`, and `key_module`.
+   2. Login: The server verifies the password_hash. Upon success, it sends back `encrypted_private_key`, `public_key`, `key_module`, and any additional keys.
 
-   3. Decryption: The user enters their passphrase locally in Tauri to decrypt the key for signing operations.
+   3. Add Additional Keys: Users can add additional keys (e.g., backup keys, device-specific keys) via the `/api/add-key` endpoint.
 
-   4. Verification: When the local FastAPI backend needs to verify a signature, it fetches the user's public_key from this server via the /api/public-key/:login endpoint.
+   4. Decryption: The user enters their passphrase locally in Tauri to decrypt the key for signing operations.
+
+   5. Verification: When the local FastAPI backend needs to verify a signature, it fetches the user's public_key and additional keys from this server via the /api/public-keys/:login endpoint.
 
 ## Local Development
 
