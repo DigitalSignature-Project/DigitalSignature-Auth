@@ -146,10 +146,12 @@ Notes:
   "login": "alice",
   "public_key": "<pem-or-jwk>",
   "key_module": "windows-cng",
+  "encrypted_private_key": "<base64-or-json>",
   "additional_keys": [
     {
       "key_type": "<type>",
       "public_key": "<pem-or-jwk>",
+      "encrypted_private_key": "<base64-or-json>",
       "key_module": "<module>"
     }
   ]

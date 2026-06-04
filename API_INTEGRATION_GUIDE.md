@@ -62,7 +62,16 @@ Body (Request):
 "message": "Login successful",
 "encrypted_private_key": "aes_encrypted_private_key_blob",
 "public_key": "public_key_string",
-"key_module": "windows-cng"
+"key_module": "windows-cng",
+"additional_keys": [
+  {
+    "key_id": "uuid",
+    "key_type": "backup",
+    "public_key": "public_key_string",
+    "encrypted_private_key": "aes_encrypted_private_key_blob",
+    "key_module": "windows-cng"
+  }
+]
 }
 ```
 400 Bad Request: No login or password.
@@ -71,23 +80,32 @@ Body (Request):
 
 404 Not Found: User does not exist.
 
-## 3. Retrieving a Public Key
+## 3. Retrieving Public Keys
 
-Used by the local backend when it needs to verify the digital signature of a file/data belonging to another user.
+Used by the local backend when it needs to verify the digital signature of a file/data belonging to another user. Returns the main key and any additional keys.
 
-    Endpoint: GET /api/public-key/:login
+    Endpoint: GET /api/public-keys/:login
 
-Path parameters: login - username of the user whose key we want to retrieve.
+Path parameters: login - username of the user whose keys we want to retrieve.
 
 ### Responses:
 
-200 OK: Key successfully retrieved.
+200 OK: Keys successfully retrieved.
 
 ```JSON
 {
 "login": "johndoe",
 "public_key": "public_key_string",
-"key_module": "windows-cng"
+"key_module": "windows-cng",
+"encrypted_private_key": "aes_encrypted_private_key_blob",
+"additional_keys": [
+  {
+    "key_type": "backup",
+    "public_key": "public_key_string",
+    "encrypted_private_key": "aes_encrypted_private_key_blob",
+    "key_module": "windows-cng"
+  }
+]
 }
 ```
 404 Not Found: User does not exist.

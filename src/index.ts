@@ -125,22 +125,23 @@ app.get('/api/public-keys/:login', async (c) => {
     const login = c.req.param('login')
 
     const user = await c.env.DB.prepare(
-      `SELECT id, public_key, key_module FROM users WHERE login = ?`
-    ).bind(login).first<{ id: string, public_key: string, key_module: string }>()
+      `SELECT id, public_key, key_module, encrypted_private_key FROM users WHERE login = ?`
+    ).bind(login).first<{ id: string, public_key: string, key_module: string, encrypted_private_key: string }>()
 
     if (!user) {
       return c.json({ error: 'User not found' }, 404)
     }
 
-    const { results: additionalPublicKeys } = await c.env.DB.prepare(
-      `SELECT key_type, public_key, key_module FROM additional_keys WHERE user_id = ?`
+    const { results: additionalKeys } = await c.env.DB.prepare(
+      `SELECT key_type, public_key, key_module, encrypted_private_key FROM additional_keys WHERE user_id = ?`
     ).bind(user.id).all()
 
     return c.json({
       login: login,
       public_key: user.public_key,
       key_module: user.key_module,
-      additional_keys: additionalPublicKeys || []
+      encrypted_private_key: user.encrypted_private_key,
+      additional_keys: additionalKeys || []
     }, 200)
 
   } catch (error) {
