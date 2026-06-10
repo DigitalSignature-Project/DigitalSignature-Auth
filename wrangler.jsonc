@@ -4,7 +4,7 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "digital-signature-serwer",
+	"name": "digital-signature-auth",
 	"main": "src/index.ts",
 	"compatibility_date": "2026-04-11",
 	"observability": {
