@@ -63,13 +63,24 @@ Body (Request):
 "encrypted_private_key": "aes_encrypted_private_key_blob",
 "public_key": "public_key_string",
 "key_module": "windows-cng",
-"additional_keys": [
+"elgamal_keys": [
   {
     "key_id": "uuid",
-    "key_type": "backup",
-    "public_key": "public_key_string",
-    "encrypted_private_key": "aes_encrypted_private_key_blob",
-    "key_module": "windows-cng"
+    "key_type": "elgamal",
+    "p_value": "p_value_string",
+    "q_value": "q_value_string",
+    "g_value": "g_value_string",
+    "y_value": "y_value_string",
+    "encrypted_private_key": "aes_encrypted_private_key_blob"
+  }
+],
+"ecdsa_keys": [
+  {
+    "key_id": "uuid",
+    "key_type": "ecdsa",
+    "x_value": "x_value_string",
+    "y_value": "y_value_string",
+    "encrypted_private_key": "aes_encrypted_private_key_blob"
   }
 ]
 }
@@ -98,19 +109,74 @@ Path parameters: login - username of the user whose keys we want to retrieve.
 "public_key": "public_key_string",
 "key_module": "windows-cng",
 "encrypted_private_key": "aes_encrypted_private_key_blob",
-"additional_keys": [
+"elgamal_keys": [
   {
-    "key_type": "backup",
-    "public_key": "public_key_string",
-    "encrypted_private_key": "aes_encrypted_private_key_blob",
-    "key_module": "windows-cng"
+    "key_type": "elgamal",
+    "p_value": "p_value_string",
+    "q_value": "q_value_string",
+    "g_value": "g_value_string",
+    "y_value": "y_value_string",
+    "encrypted_private_key": "aes_encrypted_private_key_blob"
+  }
+],
+"ecdsa_keys": [
+  {
+    "key_type": "ecdsa",
+    "x_value": "x_value_string",
+    "y_value": "y_value_string",
+    "encrypted_private_key": "aes_encrypted_private_key_blob"
   }
 ]
 }
 ```
 404 Not Found: User does not exist.
 
-## 4. Key Update (Reset / Change Key)
+## 4. Add Additional Key
+
+Endpoint allowing you to add additional cryptographic keys (ElGamal or ECDSA) to an existing user account.
+
+    Endpoint: POST /api/add-key
+
+Headers: Content-Type: application/json
+
+Body (Request for ElGamal key):
+
+```JSON
+{
+"login": "johndoe",
+"password_hash": "hashed_password_string",
+"key_type": "elgamal",
+"p_value": "p_value_string",
+"q_value": "q_value_string",
+"g_value": "g_value_string",
+"y_value": "y_value_string",
+"encrypted_private_key": "aes_encrypted_private_key_blob"
+}
+```
+
+Body (Request for ECDSA key):
+
+```JSON
+{
+"login": "johndoe",
+"password_hash": "hashed_password_string",
+"key_type": "ecdsa",
+"x_value": "x_value_string",
+"y_value": "y_value_string",
+"encrypted_private_key": "aes_encrypted_private_key_blob"
+}
+```
+### Responses:
+
+201 Created: Key added successfully. Returns {"message": "Additional key added successfully", "key_id": "uuid"}.
+
+400 Bad Request: Missing required fields or invalid key_type.
+
+401 Unauthorized: Incorrect credentials.
+
+500 Internal Server Error: Database error.
+
+## 5. Key Update (Reset / Change Key)
 
 Endpoint allowing you to replace a key pair with a new one, after prior authorization.
 

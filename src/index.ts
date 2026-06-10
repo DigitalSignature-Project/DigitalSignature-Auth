@@ -69,8 +69,12 @@ app.post('/api/login', async (c) => {
       return c.json({ error: 'Invalid credentials' }, 401)
     }
 
-    const { results: additionalKeys } = await c.env.DB.prepare(
-      `SELECT id as key_id, key_type, public_key, encrypted_private_key, key_module FROM additional_keys WHERE user_id = ?`
+    const { results: elgamalKeys } = await c.env.DB.prepare(
+      `SELECT id as key_id, 'elgamal' as key_type, p_value, q_value, g_value, y_value, encrypted_private_key FROM elgamal_keys WHERE user_id = ?`
+    ).bind(user.id).all()
+
+    const { results: ecdsaKeys } = await c.env.DB.prepare(
+      `SELECT id as key_id, 'ecdsa' as key_type, x_value, y_value, encrypted_private_key FROM ecdsa_keys WHERE user_id = ?`
     ).bind(user.id).all()
 
     return c.json({
@@ -78,7 +82,8 @@ app.post('/api/login', async (c) => {
       encrypted_private_key: user.encrypted_private_key,
       public_key: user.public_key,
       key_module: user.key_module,
-      additional_keys: additionalKeys || []
+      elgamal_keys: elgamalKeys || [],
+      ecdsa_keys: ecdsaKeys || []
     }, 200)
 
   } catch (error) {
@@ -89,9 +94,9 @@ app.post('/api/login', async (c) => {
 app.post('/api/add-key', async (c) => {
   try {
     const body = await c.req.json()
-    const { login, password_hash, key_type, public_key, encrypted_private_key, key_module } = body
+    const { login, password_hash, key_type, ...keyData } = body
 
-    if (!login || !password_hash || !key_type || !public_key || !encrypted_private_key || !key_module) {
+    if (!login || !password_hash || !key_type) {
       return c.json({ error: 'Missing required fields' }, 400)
     }
 
@@ -104,11 +109,31 @@ app.post('/api/add-key', async (c) => {
     }
 
     const keyId = crypto.randomUUID()
+    let success = false
 
-    const { success } = await c.env.DB.prepare(
-      `INSERT INTO additional_keys (id, user_id, key_type, public_key, encrypted_private_key, key_module) 
-       VALUES (?, ?, ?, ?, ?, ?)`
-    ).bind(keyId, user.id, key_type, public_key, encrypted_private_key, key_module).run()
+    if (key_type === 'elgamal') {
+      const { p_value, q_value, g_value, y_value, encrypted_private_key } = keyData
+      if (!p_value || !q_value || !g_value || !y_value || !encrypted_private_key) {
+        return c.json({ error: 'Missing required ElGamal fields' }, 400)
+      }
+      const result = await c.env.DB.prepare(
+        `INSERT INTO elgamal_keys (id, user_id, p_value, q_value, g_value, y_value, encrypted_private_key) 
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+      ).bind(keyId, user.id, p_value, q_value, g_value, y_value, encrypted_private_key).run()
+      success = result.success
+    } else if (key_type === 'ecdsa') {
+      const { x_value, y_value, encrypted_private_key } = keyData
+      if (!x_value || !y_value || !encrypted_private_key) {
+        return c.json({ error: 'Missing required ECDSA fields' }, 400)
+      }
+      const result = await c.env.DB.prepare(
+        `INSERT INTO ecdsa_keys (id, user_id, x_value, y_value, encrypted_private_key) 
+         VALUES (?, ?, ?, ?, ?)`
+      ).bind(keyId, user.id, x_value, y_value, encrypted_private_key).run()
+      success = result.success
+    } else {
+      return c.json({ error: 'Invalid key_type. Must be "elgamal" or "ecdsa"' }, 400)
+    }
 
     if (success) {
       return c.json({ message: 'Additional key added successfully', key_id: keyId }, 201)
@@ -132,8 +157,12 @@ app.get('/api/public-keys/:login', async (c) => {
       return c.json({ error: 'User not found' }, 404)
     }
 
-    const { results: additionalKeys } = await c.env.DB.prepare(
-      `SELECT key_type, public_key, key_module, encrypted_private_key FROM additional_keys WHERE user_id = ?`
+    const { results: elgamalKeys } = await c.env.DB.prepare(
+      `SELECT 'elgamal' as key_type, p_value, q_value, g_value, y_value, encrypted_private_key FROM elgamal_keys WHERE user_id = ?`
+    ).bind(user.id).all()
+
+    const { results: ecdsaKeys } = await c.env.DB.prepare(
+      `SELECT 'ecdsa' as key_type, x_value, y_value, encrypted_private_key FROM ecdsa_keys WHERE user_id = ?`
     ).bind(user.id).all()
 
     return c.json({
@@ -141,7 +170,8 @@ app.get('/api/public-keys/:login', async (c) => {
       public_key: user.public_key,
       key_module: user.key_module,
       encrypted_private_key: user.encrypted_private_key,
-      additional_keys: additionalKeys || []
+      elgamal_keys: elgamalKeys || [],
+      ecdsa_keys: ecdsaKeys || []
     }, 200)
 
   } catch (error) {
